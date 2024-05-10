@@ -2,17 +2,17 @@
 // Created by tnoulens on 4/14/24.
 //
 
-#include "traceroute.h"
+#include "../include/traceroute.h"
 
-int g_ping_flag = GO;
+/*int g_ping_flag = GO;
 
 void	tmp_handler(int useless)
 {
 	(void)useless;
 	g_ping_flag &= ~GO;
-}
+}*/
 
-int main(int ac, char **av)
+/*int main(int ac, char **av)
 {
 	struct icmphdr      *r_icmp_hdr = NULL;
 	struct icmp_filter  filter;
@@ -124,5 +124,21 @@ int main(int ac, char **av)
 		ft_putchar_fd('\n', 1);
 	if (close(socket_fd) == -1)
 		return (fprintf(stderr, "close() failed: %s", strerror(errno)), EXIT_FAILURE);
+	return (0);
+}*/
+
+int main(int ac, char **av)
+{
+	int send_sock = -1;
+	int recv_sock = -1;
+
+
+	send_sock = socket(AF_INET, 100, IPPROTO_UDP);
+	if (send_sock <= -1)
+	{
+		printf("ft_traceroute: %s\n", strerror(errno));
+		return (errno);
+	}
+
 	return (0);
 }

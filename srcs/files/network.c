@@ -94,18 +94,21 @@ int is_valid_ip(char *ip, struct sockaddr_in *data)
 	return (1);
 }
 
-void    prepare_packet(t_ppckt *icmp_hdr, int *nb_packets)
+t_ppckt    prepare_packet(int *nb_packets)
 {
 	int i;
-	ft_memset(icmp_hdr, 0, sizeof(*icmp_hdr));
-	(*icmp_hdr).hdr.type = ICMP_ECHO;
-	(*icmp_hdr).hdr.un.echo.id = htons(getpid());
-	(*icmp_hdr).hdr.code = 0;
-	for (i = 0; i < (int)sizeof((*icmp_hdr).msg) - 1; i++)
-		(*icmp_hdr).msg[i] = 'A';
-	(*icmp_hdr).msg[i] = '\0';
-	(*icmp_hdr).hdr.un.echo.sequence = htons((*nb_packets)++);
-	(*icmp_hdr).hdr.checksum  = calculate_checksum((uint16_t *) icmp_hdr, sizeof(*icmp_hdr));
+	t_ppckt icmp_hdr;
+
+	ft_memset(&icmp_hdr, 0, sizeof(icmp_hdr));
+	(icmp_hdr).hdr.type = ICMP_ECHO;
+	(icmp_hdr).hdr.un.echo.id = htons(getpid());
+	(icmp_hdr).hdr.code = 0;
+	for (i = 0; i < (int)sizeof((icmp_hdr).msg) - 1; i++)
+		(icmp_hdr).msg[i] = 'A';
+	(icmp_hdr).msg[i] = '\0';
+	(icmp_hdr).hdr.un.echo.sequence = htons((*nb_packets)++);
+	(icmp_hdr).hdr.checksum  = calculate_checksum((uint16_t *) &icmp_hdr, sizeof(icmp_hdr));
+	return (icmp_hdr);
 }
 
 void    analyze_packet(const struct icmphdr *r_icmp_hdr, int *nb_r_packets, char *error_buffer)

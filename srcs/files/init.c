@@ -4,6 +4,7 @@
 
 #include "traceroute.h"
 
+// m p I q w f
 void    check_args(int ac, char **av, int *count, char *ttl, int *linger, int *interval, char *buffer)
 {
 	size_t  len = 0;

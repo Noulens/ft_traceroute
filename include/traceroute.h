@@ -17,7 +17,7 @@
 # include <signal.h>
 # include <errno.h>
 # include "colors.h"
-# include "libft.h"
+//# include "libft.h"
 # include <netpacket/packet.h>
 # include <net/ethernet.h>
 # include <netinet/if_ether.h>
@@ -26,8 +26,6 @@
 # include <sys/time.h>
 # include <linux/icmp.h>
 
-// RFC 792 for a description of the ICMP protocol.
-// https://tools.ietf.org/html/rfc792
 # define PING_PKT_S 64
 # define PING_USLEEP_RATE 1
 # define RECV_TIMEOUT 1
@@ -35,6 +33,35 @@
 # define M 1000000
 # define THE_MAX 9223372036854775807.0
 # define MAX_HOP 30
+
+/*
+ * -f first_ttl, --first=first_ttl
+ * 		Specifies with what TTL to start. Defaults to 1.
+ *
+ * -I, --icmp
+ * 		Use ICMP ECHO for probes
+ *
+ * -m max_ttl, --max-hops=max_ttl
+ * 		Specifies  the  maximum number of hops (max time-to-live value) traceroute will probe. The
+ * 		default is 30.
+ *
+ * 	-p port, --port=port
+ *		For UDP tracing, specifies the destination port base traceroute will use (the  destination
+ *		port number will be incremented by each probe).
+ *		For  ICMP  tracing,  specifies  the initial ICMP sequence value (incremented by each probe
+ *		too).
+ *		For TCP and others specifies just the (constant) destination port to connect.  When  using
+ *		the tcptraceroute wrapper, -p specifies the source port.
+ *
+ *	-q nqueries, --queries=nqueries
+ *		Sets the number of probe packets per hop. The default is 3.
+ *
+ *	-z sendwait, --sendwait=sendwait
+ *		Minimal time interval between probes (default 0).  If the value is more than 10,  then  it
+ *		specifies a number in milliseconds, else it is a number of seconds (float point values al‐
+ *		lowed too).  Useful when some routers use rate-limit for ICMP messages.
+ *
+ * */
 
 extern int  g_ping_flag;
 
@@ -54,7 +81,7 @@ typedef struct s_ping_packet
 void            error(const char *msg, int error_code, int must_exit);
 int             is_valid_ip(char *ip, struct sockaddr_in *data);
 void            check_args(int ac, char **av, int *count, char *ttl, int *linger, int *interval, char *buffer);
-void            prepare_packet(t_ppckt *icmp_hdr, int *nb_packets);
+t_ppckt         prepare_packet(int *nb_packets);
 void            prepare_msg(socklen_t r_addr_len, char *packet, struct iovec *iov, struct sockaddr_in *r_addr, struct msghdr *msg);
 void            print_reply(const struct icmphdr *r_icmp_hdr, const char *r_buffer);
 void            analyze_packet(const struct icmphdr *r_icmp_hdr, int *nb_r_packets, char *error_buffer);
