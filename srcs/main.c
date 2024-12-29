@@ -4,9 +4,9 @@
 
 #include "../include/traceroute.h"
 
-/*int g_ping_flag = GO;
+int	g_traceroute_flag = GO;
 
-void	tmp_handler(int useless)
+/*void	tmp_handler(int useless)
 {
 	(void)useless;
 	g_ping_flag &= ~GO;
@@ -127,18 +127,58 @@ void	tmp_handler(int useless)
 	return (0);
 }*/
 
+void print_traceroute(char buffer[1024], t_traceroute traceroute)
+{
+	printf("target: %s\n", buffer);
+	printf("first: %d\n", traceroute.first_ttl);
+	printf("max: %d\n", traceroute.max_ttl);
+	printf("sendwait: %.02f\n", traceroute.send_wait);
+	printf("queries: %d\n", traceroute.n_queries);
+	printf("port: %d\n", traceroute.port);
+}
+
+void create_sockets(t_traceroute traceroute)
+{
+	if (traceroute.flags & ICMP_PROBE)
+		traceroute.fd[SO_SND] = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	else
+		traceroute.fd[SO_SND] = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (traceroute.fd[SO_SND] <= -1)
+		error("main", errno, TRUE);
+	if (traceroute.flags & ICMP_PROBE)
+		traceroute.fd[SO_RECV] = traceroute.fd[SO_SND];
+	else
+	{
+		traceroute.fd[SO_RECV] = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+		if (traceroute.fd[SO_RECV] <= -1)
+		{
+			close(traceroute.fd[SO_SND]);
+			error("main", errno, TRUE);
+		}
+	}
+}
+
+void close_all(t_traceroute traceroute)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		if (traceroute.fd[i] > 0)
+		{
+			close(traceroute.fd[i]);
+			traceroute.fd[i] = -1;
+		}
+	}
+}
+
 int main(int ac, char **av)
 {
-	int send_sock = -1;
-	int recv_sock = -1;
+	char			buffer[ADDR_LEN];
+	t_traceroute	traceroute;
 
+	traceroute = check_args(ac, av, buffer);
+	create_sockets(traceroute);
 
-	send_sock = socket(AF_INET, 100, IPPROTO_UDP);
-	if (send_sock <= -1)
-	{
-		printf("ft_traceroute: %s\n", strerror(errno));
-		return (errno);
-	}
-
-	return (0);
+	print_traceroute(buffer, traceroute);
+	close_all(traceroute);
+	return 0;
 }

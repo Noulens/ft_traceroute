@@ -64,14 +64,27 @@ void    icmp_filter_set_pass(int type, struct icmp_filter *filter)
 
 void    print_help(void)
 {
-	printf("Usage: ping [OPTION...] HOST ...\n");
-	printf("Send ICMP ECHO_REQUEST packets to network hosts.\n");
-	printf("Options:\n");
-	printf("-c=NUMBER                   stop after sending NUMBER packets\n");
-	printf("-i=NUMBER                   wait NUMBER seconds between sending each packet\n");
-	printf("     --ttl=N                specify N as time-to-live\n");
-	printf("-v                          verbose output\n");
-	printf("-W=N                        number of seconds to wait for response\n");
-	printf("-q                          quiet output\n");
-	printf("-?                          display this help\n");
+	ft_putendl_fd("Usage:\n	ft_traceroute [ -I ] [ -f first_ttl ] [ -m max_ttl ] [ -p port ] [ -q nqueries ] [ -z sendwait ] host", STDOUT_FILENO);
+	ft_putendl_fd("Options:", STDOUT_FILENO);
+	ft_putendl_fd("  -f first_ttl                Start from the first_ttl hop (instead from 1)", STDOUT_FILENO);
+	ft_putendl_fd("  -I                          Use ICMP ECHO for tracerouting", STDOUT_FILENO);
+	ft_putendl_fd("  -m max_ttl                  Set the max number of hops (max TTL to be", STDOUT_FILENO);
+	ft_putendl_fd("                              reached). Default is 30", STDOUT_FILENO);
+	ft_putendl_fd("  -n                          Do not resolve IP addresses to their domain names", STDOUT_FILENO);
+	ft_putendl_fd("  -p port                     Set the destination port to use. It is either", STDOUT_FILENO);
+	ft_putendl_fd("                              initial udp port value for \"default\" method", STDOUT_FILENO);
+	ft_putendl_fd("                              (incremented by each probe, default is 33434), or", STDOUT_FILENO);
+	ft_putendl_fd("                              initial seq for \"icmp\" (incremented as well,", STDOUT_FILENO);
+	ft_putendl_fd("                              default from 1)", STDOUT_FILENO);
+	ft_putendl_fd("  -q nqueries                 Set the number of probes per each hop. Default is", STDOUT_FILENO);
+	ft_putendl_fd("                              3", STDOUT_FILENO);
+	ft_putendl_fd("  -z sendwait                 Minimal time interval between probes (default 0).", STDOUT_FILENO);
+	ft_putendl_fd("                              If the value is more than 10, then it specifies a", STDOUT_FILENO);
+	ft_putendl_fd("                              number in milliseconds, else it is a number of", STDOUT_FILENO);
+	ft_putendl_fd("                              seconds (float point values allowed too)", STDOUT_FILENO);
+	ft_putendl_fd("  --help                      Read this help and exit", STDOUT_FILENO);
+	ft_putendl_fd("", STDOUT_FILENO);
+	ft_putendl_fd("Arguments:", STDOUT_FILENO);
+	ft_putendl_fd("+     host          The host to traceroute to", STDOUT_FILENO);
+	exit(0);
 }

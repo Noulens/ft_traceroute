@@ -94,10 +94,10 @@ int is_valid_ip(char *ip, struct sockaddr_in *data)
 	return (1);
 }
 
-t_ppckt    prepare_packet(int *nb_packets)
+t_icmp_packet	prepare_packet(int *nb_packets)
 {
 	int i;
-	t_ppckt icmp_hdr;
+	t_icmp_packet icmp_hdr;
 
 	ft_memset(&icmp_hdr, 0, sizeof(icmp_hdr));
 	(icmp_hdr).hdr.type = ICMP_ECHO;

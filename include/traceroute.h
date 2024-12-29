@@ -17,7 +17,7 @@
 # include <signal.h>
 # include <errno.h>
 # include "colors.h"
-//# include "libft.h"
+# include "libft.h"
 # include <netpacket/packet.h>
 # include <net/ethernet.h>
 # include <netinet/if_ether.h>
@@ -63,25 +63,44 @@
  *
  * */
 
-extern int  g_ping_flag;
+extern int  g_traceroute_flag;
 
-typedef enum e_opt
+typedef enum e_fd
+{
+	SO_RECV,
+	SO_SND
+}	t_fd;
+
+typedef enum e_flags
 {
 	GO = 0b00000001,
 	VERBOSE = 0b00000010,
 	QUIET = 0b00000100,
-}   t_opt;
+	ICMP_PROBE = 0b00001000,
+	NO_RESOLVE = 0b00010000,
+}   t_flags;
 
-typedef struct s_ping_packet
+typedef struct s_traceroute
+{
+	int		flags;
+	int		fd[3];
+	int		max_ttl;
+	float	send_wait;
+	int		n_queries;
+	int		first_ttl;
+	ushort	port;
+}	t_traceroute;
+
+typedef struct s_icmp_packet
 {
 	struct icmphdr  hdr;
 	char            msg[PING_PKT_S - sizeof(struct icmphdr)];
-}   t_ppckt;
+}   t_icmp_packet;
 
 void            error(const char *msg, int error_code, int must_exit);
 int             is_valid_ip(char *ip, struct sockaddr_in *data);
-void            check_args(int ac, char **av, int *count, char *ttl, int *linger, int *interval, char *buffer);
-t_ppckt         prepare_packet(int *nb_packets);
+t_traceroute	check_args(int ac, char **av, char *buffer);
+t_icmp_packet	prepare_packet(int *nb_packets);
 void            prepare_msg(socklen_t r_addr_len, char *packet, struct iovec *iov, struct sockaddr_in *r_addr, struct msghdr *msg);
 void            print_reply(const struct icmphdr *r_icmp_hdr, const char *r_buffer);
 void            analyze_packet(const struct icmphdr *r_icmp_hdr, int *nb_r_packets, char *error_buffer);

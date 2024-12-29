@@ -20,7 +20,7 @@ float	ft_atof(const char *str)
 	int		sign;
 
 	i = 0;
-	nbr = (float)ft_atoi(str);
+	nbr = (float)ft_atol(str);
 	sign = 1;
 	while (str[i] != '.' && str[i])
 	{

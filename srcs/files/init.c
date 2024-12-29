@@ -4,19 +4,55 @@
 
 #include "traceroute.h"
 
-// m p I q w f
-void    check_args(int ac, char **av, int *count, char *ttl, int *linger, int *interval, char *buffer)
+void capped_ttl(char **av, int *ttl)
+{
+	int status = 0;
+	long long const temp = ft_capped_atoll(*av, &status);
+	if (status || temp < 0)
+		error("first hop out of range", -1, TRUE);
+	if (temp > 255)
+		error("max hops cannot be more than 255", -1, TRUE);
+	*ttl = (int)temp;
+}
+
+void capped_port(char **av, ushort *port)
+{
+	int status = 0;
+	long long const temp = ft_capped_atoll(*av, &status);
+	if (status || temp < 0 || temp > UINT16_MAX)
+		error("invalid port", -1, TRUE);
+	*port = (ushort)temp;
+}
+
+void capped_queries(char **av, int *q)
+{
+	int status = 0;
+	long long const temp = ft_capped_atoll(*av, &status);
+	if (status || temp < 1 || temp > 10)
+		error("no more than 10 probes per hop", -1, TRUE);
+	*q = (int)temp;
+}
+
+// f I m p q z
+t_traceroute	check_args(const int ac, char **av, char *buffer)
 {
 	size_t  len = 0;
 
-	*count = -1;
-	++av;
 	if (ac == 1)
+		print_help();
+	ft_bzero(buffer, ADDR_LEN);
+	t_traceroute traceroute =
 	{
-		error("usage error: Destination address required", -1, TRUE);
-		return ;
-	}
-	len = ft_ptrlen((const char **)av);
+		0,
+		{ -1, -1, -1 },
+		30,
+		0,
+		3,
+		1,
+		33434
+	};
+	++av;
+	len = ft_ptrlen(av);
 	while (len--)
 	{
 		if (**av == '-')
@@ -26,97 +62,102 @@ void    check_args(int ac, char **av, int *count, char *ttl, int *linger, int *i
 			{
 				switch (**av)
 				{
-					case 'c':
+					case 'f':
 						++*av;
 						if (**av == '\0')
 						{
 							++av;
 							--len;
 						}
-						*count = ft_atoi(*av);
-						if (*count < 1)
-							error("bad number of packets to transmit.", -1, TRUE);
+						capped_ttl(av, &traceroute.first_ttl);
 						while (*(*av + 1))
 							++*av;
 						break;
-					case 'v':
-						g_ping_flag |= VERBOSE;
+					case 'I':
+						traceroute.flags |= ICMP_PROBE;
 						break ;
+					case 'n':
+						traceroute.flags |= NO_RESOLVE;
+					break ;
+					case 'm':
+						++*av;
+						if (**av == '\0')
+						{
+							++av;
+							--len;
+						}
+						capped_ttl(av, &traceroute.max_ttl);
+						while (*(*av + 1))
+							++*av;
+						break;
+					case 'p':
+						++*av;
+						if (**av == '\0')
+						{
+							++av;
+							--len;
+						}
+						capped_port(av, &traceroute.port);
+						while (*(*av + 1))
+							++*av;
+						break;
 					case 'q':
-						g_ping_flag |= QUIET;
-						break ;
-					case '?':
-						print_help();
-						exit(0);
-					case 'i':
 						++*av;
 						if (**av == '\0')
 						{
 							++av;
 							--len;
 						}
-						*interval = ft_atoi(*av);
-						if (*interval < 1)
-							error("wrong interval number.", -1, TRUE);
+						capped_queries(av, &traceroute.n_queries);
 						while (*(*av + 1))
 							++*av;
 						break;
-					case 'W':
+					case 'z':
 						++*av;
-						if (**av == '\0')
-						{
-							++av;
-							--len;
-						}
-						*linger = ft_atoi(*av);
-						if (*linger < 1)
-							error("wrong linger number.", -1, TRUE);
-						while (*(*av + 1))
-							++*av;
-						break;
+					if (**av == '\0')
+					{
+						++av;
+						--len;
+					}
+					traceroute.send_wait = ft_atof(*av);
+					if (traceroute.send_wait < 0)
+					{
+						printf("bad sendtime %f specified", traceroute.send_wait);
+						exit(2);
+					}
+					while (*(*av + 1))
+						++*av;
+					break;
 					case '-':
 						++*av;
-						if (!ft_strncmp("ttl", *av, 3))
+						if (!ft_strcmp("help", *av))
 						{
-							*av += 3;
-							if (**av == '\0')
-							{
-								++av;
-								--len;
-							}
-							int res = ft_atoi(*av);
-							if (res > 255)
-							{
-								fprintf(stderr, RED"option value too big: %d\n"RESET, res);
-								exit(1);
-							}
-							if (res <= 0)
-							{
-								fprintf(stderr, RED"option value too small: %d\n"RESET, res);
-								exit(1);
-							}
-							*ttl = (char)res;
-							while (*(*av + 1))
-								++*av;
-							break;
+							print_help();
 						}
-						else
-						{
-							fprintf(stderr, RED"ft_ping: invalid option -- \'%c\'\n"RESET, **av);
-							exit(1);
-						}
+						fprintf(stderr, RED"Bad option \'%c\'\n"RESET, **av);
+						exit(2);
 					default:
-						fprintf(stderr, RED"ft_ping: invalid option -- \'%c\'\n"RESET, **av);
-						exit(1);
+						fprintf(stderr, RED"Bad option \'%c\'\n"RESET, **av);
+						exit(2);
 				}
 				++*av;
 			}
 		}
 		else
 		{
-			size_t addr_len = ft_strlen(*av);
+			if (ft_strlen(buffer))
+			{
+				fprintf(stderr, RED"Cannot handle \"%s\" cmdline arg\n"RESET, *av);
+				exit(2);
+			}
+			size_t const addr_len = ft_strlen(*av);
 			ft_memcpy(buffer, *av, addr_len > ADDR_LEN ? ADDR_LEN : addr_len);
 		}
 		++av;
 	}
+	if (buffer[0] == '\0')
+		error("Specify \"host\" missing argument.", -1, TRUE);
+	if (traceroute.max_ttl < traceroute.first_ttl)
+		error("first hop out of range", -1, TRUE);
+	return traceroute;
 }

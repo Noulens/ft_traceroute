@@ -18,7 +18,7 @@ double	ft_atod(const char *str)
 	double	exponent;
 	int		i;
 
-	nbr = (double)ft_atoi(str);
+	nbr = (double)ft_atol(str);
 	i = 0;
 	while (str[i] && str[i] != '.')
 		i++;

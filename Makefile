@@ -116,7 +116,7 @@ rebonus:		fclean
 
 test:
 				docker-compose -f ./Docker/docker-compose.yml up --build -d
-				docker exec -it ping fish
+				docker exec -it traceroute fish
 
 cleantest:
 				docker-compose -f ./Docker/docker-compose.yml down

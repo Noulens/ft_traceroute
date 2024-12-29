@@ -1,8 +1,8 @@
 version: '3.5'
 
 services:
-  attacker:
-    container_name: ping
+  ft_traceroute:
+    container_name: traceroute
     build: ..
     restart: on-failure
     networks:
