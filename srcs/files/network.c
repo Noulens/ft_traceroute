@@ -60,7 +60,7 @@ int is_valid_ip(char *ip, struct sockaddr_in *data)
 		{
 			source = hostnameResolution(ip);
 			if (!source)
-				return (0);
+				return 0;
 			break ;
 		}
 		if (ip[i + 1] == '\0')
@@ -80,18 +80,18 @@ int is_valid_ip(char *ip, struct sockaddr_in *data)
 			free(test);
 		}
 		else
-			return (free(source), free(test), 0);
+			return free(source), free(test), 0;
 	}
 	else
 	{
 		if (inet_pton(AF_INET, source, &data->sin_addr) != 1)
-			return (free(source), 0);
+			return free(source), 0;
 	}
 	// 56 bytes for msg + 8 bytes of icmp hdr + 20 bytes for iphdr = 84 bytes
-	printf("PING %s (%s): 56 data bytes\n", ip, source);
+	printf("traceroute to %s (%s): 56 data bytes\n", ip, source);
 	free(source);
 	data->sin_family = AF_INET;
-	return (1);
+	return 1;
 }
 
 t_icmp_packet	prepare_packet(int *nb_packets)
@@ -100,15 +100,15 @@ t_icmp_packet	prepare_packet(int *nb_packets)
 	t_icmp_packet icmp_hdr;
 
 	ft_memset(&icmp_hdr, 0, sizeof(icmp_hdr));
-	(icmp_hdr).hdr.type = ICMP_ECHO;
-	(icmp_hdr).hdr.un.echo.id = htons(getpid());
-	(icmp_hdr).hdr.code = 0;
+	icmp_hdr.hdr.type = ICMP_ECHO;
+	icmp_hdr.hdr.un.echo.id = htons(getpid());
+	icmp_hdr.hdr.code = 0;
 	for (i = 0; i < (int)sizeof((icmp_hdr).msg) - 1; i++)
-		(icmp_hdr).msg[i] = 'A';
-	(icmp_hdr).msg[i] = '\0';
-	(icmp_hdr).hdr.un.echo.sequence = htons((*nb_packets)++);
-	(icmp_hdr).hdr.checksum  = calculate_checksum((uint16_t *) &icmp_hdr, sizeof(icmp_hdr));
-	return (icmp_hdr);
+		icmp_hdr.msg[i] = 'A';
+	icmp_hdr.msg[i] = '\0';
+	icmp_hdr.hdr.un.echo.sequence = htons((*nb_packets)++);
+	icmp_hdr.hdr.checksum  = calculate_checksum((uint16_t *) &icmp_hdr, sizeof(icmp_hdr));
+	return icmp_hdr;
 }
 
 void    analyze_packet(const struct icmphdr *r_icmp_hdr, int *nb_r_packets, char *error_buffer)

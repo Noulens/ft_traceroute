@@ -137,48 +137,97 @@ void print_traceroute(char buffer[1024], t_traceroute traceroute)
 	printf("port: %d\n", traceroute.port);
 }
 
-void create_sockets(t_traceroute traceroute)
+void create_sockets(t_traceroute *traceroute)
 {
-	if (traceroute.flags & ICMP_PROBE)
-		traceroute.fd[SO_SND] = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	else
-		traceroute.fd[SO_SND] = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (traceroute.fd[SO_SND] <= -1)
-		error("main", errno, TRUE);
-	if (traceroute.flags & ICMP_PROBE)
-		traceroute.fd[SO_RECV] = traceroute.fd[SO_SND];
-	else
+	if ((traceroute->flags & ICMP_PROBE && (traceroute->fd[SO_SND] = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) <= -1)
+		|| ((traceroute->flags & ICMP_PROBE) == 0 && (traceroute->fd[SO_SND] = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) <= -1))
+		error("create send socket", errno, TRUE);
+	if (traceroute->flags & ICMP_PROBE)
+		traceroute->fd[SO_RECV] = traceroute->fd[SO_SND];
+	else if ((traceroute->fd[SO_RECV] = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) <= -1)
 	{
-		traceroute.fd[SO_RECV] = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-		if (traceroute.fd[SO_RECV] <= -1)
-		{
-			close(traceroute.fd[SO_SND]);
-			error("main", errno, TRUE);
-		}
+		close(traceroute->fd[SO_SND]);
+		error("create recv socket", errno, TRUE);
 	}
 }
 
-void close_all(t_traceroute traceroute)
+void close_all(t_traceroute *traceroute)
 {
 	for (int i = 0; i < 2; i++)
 	{
-		if (traceroute.fd[i] > 0)
+		if (traceroute->fd[i] > 0)
 		{
-			close(traceroute.fd[i]);
-			traceroute.fd[i] = -1;
+			close(traceroute->fd[i]);
+			traceroute->fd[i] = -1;
 		}
 	}
 }
 
-int main(int ac, char **av)
+int main(int const ac, char **av)
 {
-	char			buffer[ADDR_LEN];
-	t_traceroute	traceroute;
+	char				buffer[ADDR_LEN];
+	t_traceroute		traceroute;
+	struct sockaddr_in	dest_addr, recv_addr;
+	socklen_t			recv_len = sizeof(recv_addr);
+	//int					nb_packets = 0;
+	//t_icmp_packet		icmp_hdr;
 
+	ft_memset(buffer, 0, ADDR_LEN);
 	traceroute = check_args(ac, av, buffer);
-	create_sockets(traceroute);
+	create_sockets(&traceroute);
 
-	print_traceroute(buffer, traceroute);
-	close_all(traceroute);
+	// TODO: DNS & Destination address
+	ft_memset(&dest_addr, 0, sizeof(dest_addr));
+	dest_addr.sin_port = htons(traceroute.port);
+	if (is_valid_ip(buffer, &dest_addr) != 1)
+	{
+		close_all(&traceroute);
+		error("unknown host", -1, TRUE);
+	}
+
+	// Main loop
+	for (int ttl = traceroute.first_ttl; ttl <= traceroute.max_ttl; ttl++)
+	{
+		if (setsockopt(traceroute.fd[SO_SND], IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0)
+		{
+			error("setsockopt ttl", errno, FALSE);
+			break;
+		}
+		// icmp_hdr = prepare_packet(&nb_packets);
+		// sendto(traceroute.fd[SO_SND], &icmp_hdr, sizeof(icmp_hdr), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0
+		if (sendto(traceroute.fd[SO_SND], NULL, 0, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0)
+		{
+			error("sento", errno, FALSE);
+			break;
+		}
+		struct timeval timeout = {3, 0};
+		if (setsockopt(traceroute.fd[SO_RECV], SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
+		{
+			error("setsockopt timeout", errno, FALSE);
+			break;
+		}
+		char bufferres[512];
+		if (recvfrom(traceroute.fd[SO_RECV], bufferres, sizeof(bufferres), 0, (struct sockaddr *)&recv_addr, &recv_len) < 0)
+		{
+			printf("%2d  *  Timeout: %s\n", ttl, strerror(errno));
+			continue;
+		}
+
+		const struct icmphdr	*r_icmp_hdr = NULL;
+		r_icmp_hdr = (struct icmphdr *) (bufferres + sizeof(struct iphdr));
+		const char *r_buffer = bufferres + sizeof(struct iphdr) + sizeof(struct icmphdr);
+		print_reply(r_icmp_hdr, r_buffer);
+
+		if (r_icmp_hdr->type == ICMP_TIME_EXCEEDED)
+		{
+			printf("%2d  %s\n", ttl, inet_ntoa(recv_addr.sin_addr));
+		}
+		else if (r_icmp_hdr->type == ICMP_DEST_UNREACH)
+		{
+			printf("%2d  %s (Reached destination)\n", ttl, inet_ntoa(recv_addr.sin_addr));
+			break;
+		}
+	}
+	close_all(&traceroute);
 	return 0;
 }

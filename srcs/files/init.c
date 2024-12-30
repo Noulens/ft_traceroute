@@ -33,14 +33,12 @@ void capped_queries(char **av, int *q)
 	*q = (int)temp;
 }
 
-// f I m p q z
 t_traceroute	check_args(const int ac, char **av, char *buffer)
 {
 	size_t  len = 0;
 
 	if (ac == 1)
 		print_help();
-	ft_bzero(buffer, ADDR_LEN);
 	t_traceroute traceroute =
 	{
 		0,
