@@ -33,6 +33,25 @@ void capped_queries(char **av, int *q)
 	*q = (int)temp;
 }
 
+void	safe_atoi(const char *str, int *i)
+{
+	int		res = 0;
+	char	*verif = NULL;
+
+	res = ft_atoi(str);
+	verif = ft_itoa(res);
+	if (ft_strncmp(verif, str, ft_strlen(verif)))
+	{
+		error("Invalid value, falling back to default", -1, FALSE);
+		free(verif);
+		verif = NULL;
+		return;
+	}
+	free(verif);
+	verif = NULL;
+	*i = res;
+}
+
 t_traceroute	check_args(const int ac, char **av, char *buffer)
 {
 	size_t  len = 0;
@@ -47,6 +66,8 @@ t_traceroute	check_args(const int ac, char **av, char *buffer)
 		0,
 		3,
 		1,
+		60,
+		32,
 		33434
 	};
 	++av;
@@ -67,7 +88,11 @@ t_traceroute	check_args(const int ac, char **av, char *buffer)
 							++av;
 							--len;
 						}
-						capped_ttl(av, &traceroute.first_ttl);
+						safe_atoi(*av, &traceroute.first_ttl);
+						if (traceroute.first_ttl > 255)
+							error("max hops cannot be more than 255", -1, TRUE);
+						if (traceroute.first_ttl < 1)
+							error("first hop out of range", -1, TRUE);
 						while (*(*av + 1))
 							++*av;
 						break;
@@ -84,7 +109,11 @@ t_traceroute	check_args(const int ac, char **av, char *buffer)
 							++av;
 							--len;
 						}
-						capped_ttl(av, &traceroute.max_ttl);
+						safe_atoi(*av, &traceroute.max_ttl);
+						if (traceroute.max_ttl > 255)
+							error("max hops cannot be more than 255", -1, TRUE);
+						if (traceroute.max_ttl < 1)
+							error("first hop out of range", -1, TRUE);
 						while (*(*av + 1))
 							++*av;
 						break;
@@ -132,10 +161,10 @@ t_traceroute	check_args(const int ac, char **av, char *buffer)
 						{
 							print_help();
 						}
-						fprintf(stderr, RED"Bad option \'%c\'\n"RESET, **av);
+						fprintf(stderr, RED"Bad option \'--%s\'\n"RESET, *av);
 						exit(2);
 					default:
-						fprintf(stderr, RED"Bad option \'%c\'\n"RESET, **av);
+						fprintf(stderr, RED"Bad option \'-%s\'\n"RESET, *av);
 						exit(2);
 				}
 				++*av;
@@ -145,11 +174,36 @@ t_traceroute	check_args(const int ac, char **av, char *buffer)
 		{
 			if (ft_strlen(buffer))
 			{
-				fprintf(stderr, RED"Cannot handle \"%s\" cmdline arg\n"RESET, *av);
-				exit(2);
+				const size_t size = ft_strlen(*av);
+				for (size_t i = 0; i < size; i++)
+				{
+					if (!ft_isdigit((*av)[i]))
+					{
+						fprintf(stderr, RED"Cannot handle \"%s\" cmdline arg\n"RESET, *av);
+						exit(2);
+					}
+				}
+				safe_atoi(*av, &traceroute.packet_size);
+				if (traceroute.packet_size > 65000)
+				{
+					fprintf(stderr, RED"too big packetlen %d specified"RESET, traceroute.packet_size);
+					exit(2);
+				}
+				if (traceroute.packet_size < 28)
+				{
+					traceroute.data_size = 0;
+					traceroute.packet_size = 28;
+				}
+				else
+				{
+					traceroute.data_size = traceroute.packet_size - 28;
+				}
 			}
-			size_t const addr_len = ft_strlen(*av);
-			ft_memcpy(buffer, *av, addr_len > ADDR_LEN ? ADDR_LEN : addr_len);
+			else
+			{
+				size_t const addr_len = ft_strlen(*av);
+				ft_memcpy(buffer, *av, addr_len > ADDR_LEN ? ADDR_LEN : addr_len);
+			}
 		}
 		++av;
 	}

@@ -17,8 +17,8 @@ char    *hostnameResolution(const char *hostname)
 	status = getaddrinfo(hostname, 0, &hints, &res);
 	if (status != 0)
 	{
-		// fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
-		return (NULL);
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+		return NULL;
 	}
 	r = res;
 	while (r != NULL)
@@ -27,13 +27,13 @@ char    *hostnameResolution(const char *hostname)
 		{
 			struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
 			if (!inet_ntop(r->ai_family, &(ipv4->sin_addr), buffer, sizeof buffer))
-				return (fprintf(stderr, "inet_ntop() failed: %s", strerror(errno)), NULL);
+				return fprintf(stderr, "inet_ntop() failed: %s", strerror(errno)), NULL;
 			// Find FQDN from result of inet_ntop()
 			status = getnameinfo((struct sockaddr *)(ipv4), sizeof(struct sockaddr_in), from, NI_MAXHOST, NULL, 0, 0);
 			if (status != 0)
 			{
-				// fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
-				return (NULL);
+				fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+				return NULL;
 			}
 			break ;
 		}
@@ -45,10 +45,10 @@ char    *hostnameResolution(const char *hostname)
 	ret = ft_strdup(buffer);
 	if (!ret)
 		error("hostname resolution", errno, TRUE);
-	return (ret);
+	return ret;
 }
 
-int is_valid_ip(char *ip, struct sockaddr_in *data)
+char	*is_valid_ip(char *ip, struct sockaddr_in *data)
 {
 	char    *source = NULL;
 
@@ -60,7 +60,7 @@ int is_valid_ip(char *ip, struct sockaddr_in *data)
 		{
 			source = hostnameResolution(ip);
 			if (!source)
-				return 0;
+				return NULL;
 			break ;
 		}
 		if (ip[i + 1] == '\0')
@@ -76,22 +76,19 @@ int is_valid_ip(char *ip, struct sockaddr_in *data)
 		if (!ft_strcmp(test, source))
 		{
 			data->sin_family = AF_INET;
-			data->sin_addr.s_addr = htonl((uint32_t)ft_atoi(source));
+			data->sin_addr.s_addr = htonl(ft_atoi(source));
 			free(test);
 		}
 		else
-			return free(source), free(test), 0;
+			return free(source), free(test), NULL;
 	}
 	else
 	{
 		if (inet_pton(AF_INET, source, &data->sin_addr) != 1)
-			return free(source), 0;
+			return free(source), NULL;
 	}
-	// 56 bytes for msg + 8 bytes of icmp hdr + 20 bytes for iphdr = 84 bytes
-	printf("traceroute to %s (%s): 56 data bytes\n", ip, source);
-	free(source);
 	data->sin_family = AF_INET;
-	return 1;
+	return source;
 }
 
 t_icmp_packet	prepare_packet(int *nb_packets)
@@ -103,11 +100,11 @@ t_icmp_packet	prepare_packet(int *nb_packets)
 	icmp_hdr.hdr.type = ICMP_ECHO;
 	icmp_hdr.hdr.un.echo.id = htons(getpid());
 	icmp_hdr.hdr.code = 0;
-	for (i = 0; i < (int)sizeof((icmp_hdr).msg) - 1; i++)
+	for (i = 0; i < (int)sizeof(icmp_hdr.msg) - 1; i++)
 		icmp_hdr.msg[i] = 'A';
 	icmp_hdr.msg[i] = '\0';
 	icmp_hdr.hdr.un.echo.sequence = htons((*nb_packets)++);
-	icmp_hdr.hdr.checksum  = calculate_checksum((uint16_t *) &icmp_hdr, sizeof(icmp_hdr));
+	icmp_hdr.hdr.checksum  = calculate_checksum((uint16_t *)&icmp_hdr, sizeof(icmp_hdr));
 	return icmp_hdr;
 }
 

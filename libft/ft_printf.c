@@ -37,6 +37,10 @@ static	int	ft_print_format(int j, const char *format, va_list arg)
 		return (i += ft_percentage());
 	else if (*format == 'l' && *(format + 1) == 'd')
 		return (i += ft_ld(va_arg(arg, long)));
+    else if (*format == 'f')
+    	return (i += ft_float(va_arg(arg, double), 6));
+    else if (*format == '.' && ft_isdigit(*(format + 1)) && *(format + 2) == 'f')
+    	return (i += ft_float(va_arg(arg, double), ft_atoi(format + 1)));
 	else
 		return (-1);
 }
@@ -72,6 +76,11 @@ int	ft_printf(const char *format, ...)
 			j = ft_print_format(j, ++format, arg);
 			++format;
 		}
+        else if (*(format + 1) == '.' && ft_isdigit(*(format + 2)) && *(format + 3) == 'f')
+      	{
+        	j = ft_print_format(j, ++format, arg);
+        	format += 2;
+      	}
 		else
 			j = ft_print_format(j, ++format, arg);
 		if (++format, j == -1)

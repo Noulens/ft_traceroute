@@ -47,7 +47,7 @@ static int	ft_nblen(int len, unsigned long nb)
 	return (len);
 }
 
-static void	ft_putter(long n, int prec, int fd)
+static void	ft_putter(long n, int prec, int fd, int *len)
 {
 	int		i;
 	char	tab[52];
@@ -57,13 +57,16 @@ static void	ft_putter(long n, int prec, int fd)
 	i = 0;
 	if (n < 0)
 	{
+        *len += 1;
 		write(fd, "-", 1);
 		n *= -1;
 	}
 	if (ft_nblen(0, n) == 1)
 		return (put_zero(prec, fd, n), (void)0);
 	if (ft_nblen(0, n) <= prec)
-		write(fd, "0", 1);
+	{
+		*len += write(fd, "0", 1);
+	}
 	while (n > 0)
 	{
 		tab[i++] = n % 10 + 48;
@@ -72,7 +75,7 @@ static void	ft_putter(long n, int prec, int fd)
 		n /= 10;
 	}
 	while (--i >= 0)
-		write(fd, &tab[i], 1);
+		*len += write(fd, &tab[i], 1);
 }
 
 static int	ft_recursive_power(int n, int power)
@@ -84,24 +87,27 @@ static int	ft_recursive_power(int n, int power)
 	return (ft_recursive_power(n, power - 1) * n);
 }
 
-void	ft_putfloat_fd(float x, int precision, int fd)
+int	ft_putfloat_fd(float x, int precision, int fd)
 {
 	long	n;
 	int		pow;
 	int		len;
+    int		res;
 
 	pow = ft_recursive_power(10, precision);
 	x *= pow;
 	if (x > 2147483647.0f * pow || x < -2147483648.0f * pow)
-		return (write(2, "overflow\n", 9), (void)0);
+		return (write(2, "overflow\n", 9), 0);
 	else
 	{
 		n = (long)x;
 		len = ft_nblen(0, n);
 		if (len > 50)
-			return (write(2, "overflow\n", 9), (void)0);
-		ft_putter(n, precision, fd);
+			return (write(2, "overflow\n", 9), 0);
+        res = 0;
+		ft_putter(n, precision, fd, &res);
 	}
+    return (res);
 }
 /*
 #include <unistd.h>

@@ -33,6 +33,7 @@
 # define M 1000000
 # define THE_MAX 9223372036854775807.0
 # define MAX_HOP 30
+# define DEFAULT_PACKET "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
 /*
  * -f first_ttl, --first=first_ttl
@@ -63,8 +64,6 @@
  *
  * */
 
-extern int  g_traceroute_flag;
-
 typedef enum e_fd
 {
 	SO_RECV,
@@ -73,11 +72,8 @@ typedef enum e_fd
 
 typedef enum e_flags
 {
-	GO = 0b00000001,
-	VERBOSE = 0b00000010,
-	QUIET = 0b00000100,
-	ICMP_PROBE = 0b00001000,
-	NO_RESOLVE = 0b00010000,
+	ICMP_PROBE = 0b00000001,
+	NO_RESOLVE = 0b00000010
 }   t_flags;
 
 typedef struct s_traceroute
@@ -88,6 +84,8 @@ typedef struct s_traceroute
 	float	send_wait;
 	int		n_queries;
 	int		first_ttl;
+	int		packet_size;
+	int		data_size;
 	ushort	port;
 }	t_traceroute;
 
@@ -98,10 +96,9 @@ typedef struct s_icmp_packet
 }   t_icmp_packet;
 
 void            error(const char *msg, int error_code, int must_exit);
-int             is_valid_ip(char *ip, struct sockaddr_in *data);
+char			*is_valid_ip(char *ip, struct sockaddr_in *data);
 t_traceroute	check_args(int ac, char **av, char *buffer);
 t_icmp_packet	prepare_packet(int *nb_packets);
-void            prepare_msg(socklen_t r_addr_len, char *packet, struct iovec *iov, struct sockaddr_in *r_addr, struct msghdr *msg);
 void            print_reply(const struct icmphdr *r_icmp_hdr, const char *r_buffer);
 void            analyze_packet(const struct icmphdr *r_icmp_hdr, int *nb_r_packets, char *error_buffer);
 void            print_help(void);

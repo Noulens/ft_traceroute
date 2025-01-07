@@ -45,7 +45,7 @@ double gettimeinms(void)
 		fprintf(stderr, "Error in getting start time\n");
 		return (-1);
 	}
-	return ((double)tv.tv_sec * 1000.0 + (double)tv.tv_usec / 1000.0);
+	return (double)tv.tv_sec * 1000.0 + (double)tv.tv_usec / 1000.0;
 }
 
 // Function to set all bits in the filter
@@ -86,5 +86,8 @@ void    print_help(void)
 	ft_putendl_fd("", STDOUT_FILENO);
 	ft_putendl_fd("Arguments:", STDOUT_FILENO);
 	ft_putendl_fd("+     host          The host to traceroute to", STDOUT_FILENO);
+	ft_putendl_fd("      packetlen     The full packet length (default is the length of an IP", STDOUT_FILENO);
+	ft_putendl_fd("                    header plus 40). Can be ignored or increased to a minimal", STDOUT_FILENO);
+	ft_putendl_fd("                    allowed value", STDOUT_FILENO);
 	exit(0);
 }
