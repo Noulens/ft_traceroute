@@ -14,6 +14,7 @@ RUN	        apt update && \
             dsniff \
             net-tools \
             tcpdump \
+            traceroute \
             inetutils-ping && \
             mkdir ft_traceroute && \
             chmod 777 ft_traceroute

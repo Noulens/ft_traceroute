@@ -78,13 +78,13 @@ typedef enum e_flags
 
 typedef struct s_traceroute
 {
-	int		flags;
-	int		fd[3];
-	int		max_ttl;
-	float	send_wait;
-	int		n_queries;
-	int		first_ttl;
-	int		packet_size;
+	int		flags; // I and n
+	int		fd[2];
+	int		max_ttl; // m
+	float	send_wait; // z
+	int		n_queries; // q
+	int		first_ttl; // f
+	int		packet_size; // 2nd arg
 	int		data_size;
 	ushort	port;
 }	t_traceroute;
@@ -98,7 +98,7 @@ typedef struct s_icmp_packet
 void            error(const char *msg, int error_code, int must_exit);
 char			*is_valid_ip(char *ip, struct sockaddr_in *data);
 t_traceroute	check_args(int ac, char **av, char *buffer);
-t_icmp_packet	prepare_packet(int *nb_packets);
+t_icmp_packet	prepare_icmp_packet(int *nb_packets);
 void            print_reply(const struct icmphdr *r_icmp_hdr, const char *r_buffer);
 void            analyze_packet(const struct icmphdr *r_icmp_hdr, int *nb_r_packets, char *error_buffer);
 void            print_help(void);

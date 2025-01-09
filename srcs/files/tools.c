@@ -17,13 +17,13 @@ unsigned short calculate_checksum(unsigned short *buf, int len)
 	}
 	if (len == 1)
 	{
-		*((unsigned char *)&answer) = *((unsigned char *)w);
+		*(unsigned char *)&answer = *(unsigned char *)w;
 		sum += answer;
 	}
 	sum = (sum >> 16) + (sum & 0xFFFF);
-	sum += (sum >> 16);
+	sum += sum >> 16;
 	answer = ~sum;
-	return (answer);
+	return answer;
 }
 
 void    print_reply(const struct icmphdr *r_icmp_hdr, const char *r_buffer)

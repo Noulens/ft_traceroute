@@ -17,7 +17,7 @@ char    *hostnameResolution(const char *hostname)
 	status = getaddrinfo(hostname, 0, &hints, &res);
 	if (status != 0)
 	{
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+		fprintf(stderr, "%s: %s\n", hostname, gai_strerror(status));
 		return NULL;
 	}
 	r = res;
@@ -91,7 +91,7 @@ char	*is_valid_ip(char *ip, struct sockaddr_in *data)
 	return source;
 }
 
-t_icmp_packet	prepare_packet(int *nb_packets)
+t_icmp_packet	prepare_icmp_packet(int *nb_packets)
 {
 	int i;
 	t_icmp_packet icmp_hdr;

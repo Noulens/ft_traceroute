@@ -61,7 +61,7 @@ t_traceroute	check_args(const int ac, char **av, char *buffer)
 	t_traceroute traceroute =
 	{
 		0,
-		{ -1, -1, -1 },
+		{-1, -1},
 		30,
 		0,
 		3,
