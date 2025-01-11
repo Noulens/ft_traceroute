@@ -2,3 +2,5 @@
 ft_traceroute
 *.txt
 test
+*.o
+*.a
